@@ -2,5 +2,10 @@
     "name": "main",
     "version-string": "latest",
     "builtin-baseline": "1bf27ad221da9acea6bd5788026df9e9b81631d9",
-    "dependencies": []
+    "dependencies": [
+        {
+            "name": "curl",
+            "version>=": "8.11.1"
+        }
+    ]
 }
