@@ -154,6 +154,7 @@ DWORD WINAPI scan(const LPVOID param) {
 void ProcessRawInput(LPARAM lParam) {
     RAWINPUT rawInput;
     UINT dwSize;
+    char* device_name = NULL;
 
     GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
     BYTE* lpb = (BYTE*)malloc(dwSize);
@@ -176,7 +177,7 @@ void ProcessRawInput(LPARAM lParam) {
 
     UINT name_size;
     GetRawInputDeviceInfoA(raw->header.hDevice, RIDI_DEVICENAME, NULL, &name_size);
-    char* device_name = malloc(name_size);
+    device_name = malloc(name_size);
 
     if (!GetRawInputDeviceInfoA(raw->header.hDevice, RIDI_DEVICENAME, device_name, &name_size) > 0) {
         goto END;
