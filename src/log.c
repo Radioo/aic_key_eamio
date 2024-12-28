@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-void log(const char* fmt, ...) {
+void my_log(const char* fmt, ...) {
     // Pass to printf for now
     va_list args;
     va_start(args, fmt);
@@ -14,10 +14,10 @@ void log(const char* fmt, ...) {
 void log_windows_error(const char* text, const DWORD code) {
     LPSTR error_text = get_error_text(code);
     if(error_text == NULL) {
-        log(text);
+        my_log(text);
     }
     else {
-        log("%s with error: %s", text, error_text);
+        my_log("%s with error: %s", text, error_text);
         LocalFree(error_text);
     }
 }
@@ -36,7 +36,7 @@ LPTSTR get_error_text(const int code) {
     );
 
     if(size == 0) {
-        log("FormatMessage failed with error code: %d\n", GetLastError());
+        my_log("FormatMessage failed with error code: %d\n", GetLastError());
         return NULL;
     }
 

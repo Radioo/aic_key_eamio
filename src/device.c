@@ -40,10 +40,10 @@ void list_device_descriptions(HDEVINFO devices) {
             0
         );
         if(!result) {
-            log("Failed to get required size for device %lu, error: %d\n", deviceIndex, GetLastError());
+            my_log("Failed to get required size for device %lu, error: %d\n", deviceIndex, GetLastError());
         }
         else {
-            log("Size required for device %lu: %lu\n", deviceIndex, required_size);
+            my_log("Size required for device %lu: %lu\n", deviceIndex, required_size);
         }
 
         WCHAR deviceDesc[1024];
@@ -108,7 +108,7 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
             continue;
         }
 
-        log("Device ID: %ls\n", device_id);
+        my_log("Device ID: %ls\n", device_id);
 
         DWORD required_size = 0;
         SetupDiGetDeviceRegistryProperty(
@@ -135,13 +135,13 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
                     output = add_device(output, device_count, location_information);
                 }
 
-                log("Location information: %s\n", location_information);
+                my_log("Location information: %s\n", location_information);
 
                 DWORD sibling_size = 0;
                 LPWSTR siblings = get_string_property(devices, &device_info_data, &DEVPKEY_Device_Siblings, &sibling_size);
                 if(siblings != NULL) {
                     add_siblings(output, *device_count, location_information, siblings, sibling_size);
-                    log("Siblings: ");
+                    my_log("Siblings: ");
                     for(int i = 0; i < sibling_size / sizeof(WCHAR); i++) {
                         putwchar(siblings[i]);
                     }
@@ -152,13 +152,13 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
 
         LPWSTR parent = get_string_property(devices, &device_info_data, &DEVPKEY_Device_Parent, NULL);
         if(parent != NULL) {
-            log("Parent: %ls\n", parent);
+            my_log("Parent: %ls\n", parent);
         }
 
         DWORD children_size = 0;
         LPWSTR children = get_string_property(devices, &device_info_data, &DEVPKEY_Device_Children, &children_size);
         if(children != NULL) {
-            log("Children: ");
+            my_log("Children: ");
             for(int i = 0; i < children_size / sizeof(WCHAR); i++) {
                 putwchar(children[i]);
             }
@@ -187,7 +187,7 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
                 continue;
             }
 
-            log("Device path: %s\n", interface_detail_data->DevicePath);
+            my_log("Device path: %s\n", interface_detail_data->DevicePath);
 
             if(details->mi == 0) {
                 add_cardio_path(output, *device_count, interface_detail_data->DevicePath, parent);

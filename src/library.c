@@ -3,7 +3,7 @@
 #include "bemanitools/eamio.h"
 
 #include <stdio.h>
-#include <curl/curl.h>
+#include <confuse.h>
 
 log_formatter_t misc_logger;
 log_formatter_t info_logger;
@@ -16,6 +16,9 @@ thread_destroy_t destroy_thread;
 
 uint8_t sensor_1_state = 0x03;
 uint8_t sensor_2_state = 0x03;
+
+// Config
+long int single_unit_no = 0;
 
 __declspec(dllexport) void eam_io_set_loggers(
     const log_formatter_t misc,
@@ -38,7 +41,7 @@ __declspec(dllexport) bool eam_io_init(
     join_thread = thread_join;
     destroy_thread = thread_destroy;
 
-    create_thread(initialize, NULL, 0, 0);
+    create_thread(initialize, NULL, 0x4000, 0);
 
     return true;
 }
@@ -77,12 +80,22 @@ __declspec(dllexport) bool eam_io_poll(uint8_t unit_no) {
 }
 
 __declspec(dllexport) const struct eam_io_config_api* eam_io_get_config_api(void) {
-    // misc_logger("eam_io_get_config_api", "Returning NULL");
+    misc_logger("eam_io_get_config_api", "Returning NULL");
     return NULL;
 }
 
 int initialize(void* ctx) {
     misc_logger("aic_key_eamio", "Initializing library");
+
+    cfg_opt_t opts[] = {
+        CFG_SIMPLE_INT("single_unit_no", &single_unit_no),
+        CFG_END()
+    };
+    cfg_t *cfg = cfg_init(opts, 0);
+    cfg_parse(cfg, "eamio.conf");
+
+    printf("single_unit_no: %d\n", single_unit_no);
+
     init(misc_logger);
     return 0;
 }

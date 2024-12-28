@@ -4,8 +4,8 @@
     "builtin-baseline": "1bf27ad221da9acea6bd5788026df9e9b81631d9",
     "dependencies": [
         {
-            "name": "curl",
-            "version>=": "8.11.1"
+            "name": "libconfuse",
+            "version>=": "3.3"
         }
     ]
 }

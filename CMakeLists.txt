@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 23)
 
 file(GLOB_RECURSE sources src/*.c)
 
-find_package(CURL REQUIRED)
+find_package(unofficial-libconfuse CONFIG REQUIRED)
 
 add_library(eamio SHARED ${sources})
-target_link_libraries(eamio PRIVATE CURL::libcurl setupapi hid)
+target_link_libraries(eamio PRIVATE setupapi hid unofficial::libconfuse::libconfuse)
