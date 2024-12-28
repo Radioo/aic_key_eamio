@@ -21,9 +21,9 @@ static const int KEYPAD_MI = 1;
 
 static HWND window = NULL;
 static uint16_t* keypad_states;
-static uint8_t reader_1_bytes[8];
+static uint8_t reader_1_bytes[9];
 static bool reader_1_inserted = false;
-static uint8_t reader_2_bytes[8];
+static uint8_t reader_2_bytes[9];
 static bool reader_2_inserted = false;
 static WNDPROC orig_proc = NULL;
 
@@ -144,13 +144,13 @@ DWORD WINAPI scan(const LPVOID param) {
         }
 
         printf("Device %d [%d bytes]: Card type: %d\n", device_id, bytesRead, buffer[0]);
-        for(auto j = 1; j < bytesRead; j++) {
+        for(auto j = 0; j < bytesRead; j++) {
             if(device_id == 0) {
-                reader_1_bytes[j - 1] = buffer[j];
+                reader_1_bytes[j] = buffer[j];
                 reader_1_inserted = true;
             }
             else {
-                reader_2_bytes[j - 1] = buffer[j];
+                reader_2_bytes[j] = buffer[j];
                 reader_2_inserted = true;
             }
             printf("%02X", buffer[j]);
@@ -392,9 +392,10 @@ int init() {
     return 0;
 }
 
-void get_reader_bytes(uint8_t unit_no, uint8_t* input) {
+uint8_t get_reader_bytes(uint8_t unit_no, uint8_t* input) {
     uint8_t* reader_bytes = unit_no == 0 ? reader_1_bytes : reader_2_bytes;
-    memcpy(input, reader_bytes, 8);
+    memcpy(input, reader_bytes + 1, 8);
+    return reader_bytes[0];
 }
 
 bool get_reader_state(uint8_t unit_no) {

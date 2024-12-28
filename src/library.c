@@ -52,21 +52,24 @@ __declspec(dllexport) uint16_t eam_io_get_keypad_state(uint8_t unit_no) {
 }
 
 __declspec(dllexport) uint8_t eam_io_get_sensor_state(uint8_t unit_no) {
-    return unit_no == 0 ? sensor_1_state : sensor_2_state;
+    uint8_t state = unit_no == 0 ? sensor_1_state : sensor_2_state;
+    // misc_logger("aic_key_eamio", "eam_io_get_sensor_state unit_no: %d, return: %d", unit_no, state);
+    return state;
 }
 
 __declspec(dllexport) uint8_t eam_io_read_card(uint8_t unit_no, uint8_t *card_id, uint8_t nbytes) {
-    get_reader_bytes(unit_no, card_id);
-    return 0;
+    // misc_logger("aic_key_eamio", "eam_io_read_card unit_no: %d, card_id: %d, nbytes: %d", unit_no, card_id, nbytes);
+    return get_reader_bytes(unit_no, card_id);
 }
 
 __declspec(dllexport) bool eam_io_card_slot_cmd(uint8_t unit_no, uint8_t cmd) {
-    // misc_logger("eam_io_card_slot_cmd", "unit_no: %d, cmd: %d", unit_no, cmd);
+    // misc_logger("aic_key_eamio", "eam_io_card_slot_cmd unit_no: %d, cmd: %d", unit_no, cmd);
     process_card_slot_cmd(unit_no, cmd);
     return true;
 }
 
 __declspec(dllexport) bool eam_io_poll(uint8_t unit_no) {
+    // misc_logger("aic_key_eamio", "eam_io_poll unit_no: %d", unit_no);
     return true;
 }
 
