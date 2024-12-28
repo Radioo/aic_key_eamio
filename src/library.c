@@ -14,6 +14,9 @@ thread_create_t create_thread;
 thread_join_t join_thread;
 thread_destroy_t destroy_thread;
 
+uint8_t sensor_1_state = 0;
+uint8_t sensor_2_state = 0;
+
 __declspec(dllexport) void eam_io_set_loggers(
     const log_formatter_t misc,
     const log_formatter_t info,
@@ -49,18 +52,18 @@ __declspec(dllexport) uint16_t eam_io_get_keypad_state(uint8_t unit_no) {
 }
 
 __declspec(dllexport) uint8_t eam_io_get_sensor_state(uint8_t unit_no) {
-    // misc_logger("eam_io_get_sensor_state", "unit_no: %d", unit_no);
-    return 0;
+    return unit_no == 0 ? sensor_1_state : sensor_2_state;
 }
 
 __declspec(dllexport) uint8_t eam_io_read_card(uint8_t unit_no, uint8_t *card_id, uint8_t nbytes) {
-    // misc_logger("eam_io_read_card", "unit_no: %d, nbytes: %d", unit_no, nbytes);
+    get_reader_bytes(unit_no, card_id);
     return 0;
 }
 
 __declspec(dllexport) bool eam_io_card_slot_cmd(uint8_t unit_no, uint8_t cmd) {
     // misc_logger("eam_io_card_slot_cmd", "unit_no: %d, cmd: %d", unit_no, cmd);
-    return false;
+    process_card_slot_cmd(unit_no, cmd);
+    return true;
 }
 
 __declspec(dllexport) bool eam_io_poll(uint8_t unit_no) {
@@ -76,4 +79,30 @@ int initialize(void* ctx) {
     misc_logger("aic_key_eamio", "Initializing library");
     init(misc_logger);
     return 0;
+}
+
+void process_card_slot_cmd(uint8_t unit_no, uint8_t cmd) {
+    uint8_t* state = unit_no == 0 ? &sensor_1_state : &sensor_2_state;
+    bool inserted = false;
+
+    switch(cmd) {
+        case EAM_IO_CARD_SLOT_CMD_CLOSE:
+            *state = 0x00;
+            break;
+        case EAM_IO_CARD_SLOT_CMD_OPEN:
+            inserted = get_reader_state(unit_no);
+            *state = inserted ? 0x03 : 0x00;
+            break;
+        case EAM_IO_CARD_SLOT_CMD_EJECT:
+            *state = 0x00;
+            break;
+        case EAM_IO_CARD_SLOT_CMD_READ:
+            inserted = get_reader_state(unit_no);
+            *state = inserted ? 0x03 : 0x00;
+            break;
+        default:
+            break;
+    }
+
+    // misc_logger("aic_key_eamio", "Unit %d: Card slot command %d, state: %d", unit_no, cmd, *state);
 }

@@ -21,6 +21,10 @@ static const int KEYPAD_MI = 1;
 
 static HWND window = NULL;
 static uint16_t* keypad_states;
+static uint8_t reader_1_bytes[8];
+static bool reader_1_inserted = false;
+static uint8_t reader_2_bytes[8];
+static bool reader_2_inserted = false;
 static WNDPROC orig_proc = NULL;
 
 device_t* devices;
@@ -141,11 +145,27 @@ DWORD WINAPI scan(const LPVOID param) {
 
         printf("Device %d [%d bytes]: Card type: %d\n", device_id, bytesRead, buffer[0]);
         for(auto j = 1; j < bytesRead; j++) {
+            if(device_id == 0) {
+                reader_1_bytes[j - 1] = buffer[j];
+                reader_1_inserted = true;
+            }
+            else {
+                reader_2_bytes[j - 1] = buffer[j];
+                reader_2_inserted = true;
+            }
             printf("%02X", buffer[j]);
         }
         putchar('\n');
 
-        Sleep(100);
+        Sleep(1000);
+        if(device_id == 0) {
+            memset(reader_1_bytes, 0, sizeof(reader_1_bytes));
+            reader_1_inserted = false;
+        }
+        else {
+            memset(reader_2_bytes, 0, sizeof(reader_2_bytes));
+            reader_2_inserted = false;
+        }
     }
 
     return EXIT_SUCCESS;
@@ -211,16 +231,8 @@ void ProcessRawInput(LPARAM lParam) {
 }
 
 LRESULT CALLBACK HiddenWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    // MessageBox(NULL, "Message received", "Message", MB_OK);
     if (uMsg == WM_INPUT) {
-        LARGE_INTEGER freq, start, end;
-        double time;
-        QueryPerformanceFrequency(&freq);
-        QueryPerformanceCounter(&start);
         ProcessRawInput(lParam);
-        QueryPerformanceCounter(&end);
-
-        misc_logger("aic-time", "Time taken: %f", (double)(end.QuadPart - start.QuadPart) / freq.QuadPart);
     }
 
     if(orig_proc) {
@@ -378,4 +390,13 @@ int init() {
     }
 
     return 0;
+}
+
+void get_reader_bytes(uint8_t unit_no, uint8_t* input) {
+    uint8_t* reader_bytes = unit_no == 0 ? reader_1_bytes : reader_2_bytes;
+    memcpy(input, reader_bytes, 8);
+}
+
+bool get_reader_state(uint8_t unit_no) {
+    return unit_no == 0 ? reader_1_inserted : reader_2_inserted;
 }
