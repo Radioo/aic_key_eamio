@@ -157,7 +157,7 @@ DWORD WINAPI scan(const LPVOID param) {
         }
         putchar('\n');
 
-        Sleep(1000);
+        Sleep(2000);
         if(device_id == 0) {
             memset(reader_1_bytes, 0, sizeof(reader_1_bytes));
             reader_1_inserted = false;

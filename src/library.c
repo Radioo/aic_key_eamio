@@ -14,8 +14,8 @@ thread_create_t create_thread;
 thread_join_t join_thread;
 thread_destroy_t destroy_thread;
 
-uint8_t sensor_1_state = 0;
-uint8_t sensor_2_state = 0;
+uint8_t sensor_1_state = 0x03;
+uint8_t sensor_2_state = 0x03;
 
 __declspec(dllexport) void eam_io_set_loggers(
     const log_formatter_t misc,
@@ -70,6 +70,9 @@ __declspec(dllexport) bool eam_io_card_slot_cmd(uint8_t unit_no, uint8_t cmd) {
 
 __declspec(dllexport) bool eam_io_poll(uint8_t unit_no) {
     // misc_logger("aic_key_eamio", "eam_io_poll unit_no: %d", unit_no);
+    uint8_t* state = unit_no == 0 ? &sensor_1_state : &sensor_2_state;
+    bool inserted = get_reader_state(unit_no);
+    *state = inserted ? 0x03 : 0x00;
     return true;
 }
 
