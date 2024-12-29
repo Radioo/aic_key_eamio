@@ -32,6 +32,10 @@ int device_count = 0;
 log_formatter_t misc_logger;
 
 uint16_t get_keypad_state(int device_index) {
+    if(device_index >= device_count) {
+        return 0;
+    }
+
     return keypad_states[device_index];
 }
 
@@ -350,6 +354,9 @@ int init() {
     }
 
     keypad_states = malloc(device_count * sizeof(uint16_t));
+    for(int i = 0; i < device_count; i++) {
+        keypad_states[i] = 0;
+    }
 
     printf("Devices found: %d\n", device_count);
     for(int i = 0; i < device_count; i++) {

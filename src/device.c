@@ -87,8 +87,8 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
         return NULL;
     }
 
-    device_t* output = NULL;
-    *device_count = 0;
+    parsed_device_t* parsed_devices = NULL;
+    int parsed_device_count = 0;
 
     DWORD device_index = 0;
     SP_DEVINFO_DATA device_info_data;
@@ -107,6 +107,19 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
         if(details == NULL || details->vid != vid || details->pid != pid) {
             continue;
         }
+
+        if(parsed_device_count == 0) {
+            parsed_devices = malloc(sizeof(parsed_device_t));
+            init_parsed_device(&parsed_devices[parsed_device_count]);
+            parsed_device_count++;
+        }
+        else {
+            parsed_devices = realloc(parsed_devices, (parsed_device_count + 1) * sizeof(parsed_device_t));
+            init_parsed_device(&parsed_devices[parsed_device_count]);
+            parsed_device_count++;
+        }
+
+        wcscpy(parsed_devices[parsed_device_count - 1].id, device_id);
 
         my_log("Device ID: %ls\n", device_id);
 
@@ -131,16 +144,25 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
                 required_size,
                 NULL
             )) {
-                if(!device_location_exists(location_information, output, *device_count)) {
-                    output = add_device(output, device_count, location_information);
-                }
+                strcpy_s(parsed_devices[parsed_device_count - 1].location, required_size, location_information);
 
                 my_log("Location information: %s\n", location_information);
 
                 DWORD sibling_size = 0;
                 LPWSTR siblings = get_string_property(devices, &device_info_data, &DEVPKEY_Device_Siblings, &sibling_size);
                 if(siblings != NULL) {
-                    add_siblings(output, *device_count, location_information, siblings, sibling_size);
+                    PWSTR end_of_current_siblings = wcsstr(parsed_devices[parsed_device_count - 1].siblings, L"\0\0");
+                    for(DWORD i = 0; i < sibling_size / sizeof(WCHAR); i++) {
+                        if(siblings[i] == L'\0') {
+                            *end_of_current_siblings = L' ';
+                            end_of_current_siblings++;
+                        }
+                        else {
+                            *end_of_current_siblings = siblings[i];
+                            end_of_current_siblings++;
+                        }
+                    }
+
                     my_log("Siblings: ");
                     for(int i = 0; i < sibling_size / sizeof(WCHAR); i++) {
                         putwchar(siblings[i]);
@@ -154,6 +176,7 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
         if(parent != NULL) {
             my_log("Parent: %ls\n", parent);
         }
+        wcscpy(parsed_devices[parsed_device_count - 1].parent, parent);
 
         DWORD children_size = 0;
         LPWSTR children = get_string_property(devices, &device_info_data, &DEVPKEY_Device_Children, &children_size);
@@ -190,10 +213,10 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
             my_log("Device path: %s\n", interface_detail_data->DevicePath);
 
             if(details->mi == 0) {
-                add_cardio_path(output, *device_count, interface_detail_data->DevicePath, parent);
+                wcscpy(parsed_devices[parsed_device_count - 1].cardio_path, interface_detail_data->DevicePath);
             }
             else if(details->mi == 1) {
-                add_keypad_path(output, *device_count, interface_detail_data->DevicePath, parent);
+                wcscpy(parsed_devices[parsed_device_count - 1].keypad_identifier, interface_detail_data->DevicePath);
             }
         }
 
@@ -204,7 +227,20 @@ device_t* get_devices(int vid, int pid, int mi, int* device_count) {
         putchar('\n');
     }
 
-    return output;
+    my_log("Parsed device count: %d\n", parsed_device_count);
+    for(int i = 0; i < parsed_device_count; i++) {
+        my_log("Parsed device %d:\n", i);
+        my_log("ID: %ws\n", parsed_devices[i].id);
+        my_log("Location: %s\n", parsed_devices[i].location);
+        my_log("Parent: %ws\n", parsed_devices[i].parent);
+        my_log("Siblings: %ws\n", parsed_devices[i].siblings);
+        my_log("CardIO path: %s\n", parsed_devices[i].cardio_path);
+        my_log("Keypad identifier: %s\n", parsed_devices[i].keypad_identifier);
+        putchar('\n');
+    }
+
+    my_log("Grouping devices...\n");
+    return group_devices(parsed_devices, parsed_device_count, device_count);
 }
 
 HDEVINFO get_device_info() {
@@ -438,4 +474,51 @@ BOOL validate_device(const char* device_path, const int vid, const int pid, cons
 
         return parsed_vid == vid && parsed_pid == pid && parsed_mi == mi;
     }
+}
+
+void init_parsed_device(parsed_device_t* parsed_device) {
+    memset(parsed_device->id, 0, sizeof(parsed_device->id));
+    memset(parsed_device->location, 0, sizeof(parsed_device->location));
+    memset(parsed_device->parent, 0, sizeof(parsed_device->parent));
+    memset(parsed_device->siblings, 0, sizeof(parsed_device->siblings));
+    memset(parsed_device->cardio_path, 0, sizeof(parsed_device->cardio_path));
+    memset(parsed_device->keypad_identifier, 0, sizeof(parsed_device->keypad_identifier));
+}
+
+device_t* group_devices(parsed_device_t* parsed_devices, int parsed_device_count, int* device_count) {
+    device_t* devices = NULL;
+    *device_count = 0;
+
+    // Gather devices with location information to initialize the device_t array
+    for(int i = 0; i < parsed_device_count; i++) {
+        if(parsed_devices[i].location[0] == '\0') {
+            continue;
+        }
+
+        if(!device_location_exists(parsed_devices[i].location, devices, *device_count)) {
+            devices = add_device(devices, device_count, parsed_devices[i].location);
+        }
+
+        add_siblings(devices, *device_count, parsed_devices[i].location, parsed_devices[i].siblings, wcslen(parsed_devices[i].siblings) * sizeof(WCHAR));
+    }
+
+    if(*device_count == 0) {
+        return NULL;
+    }
+
+    for(int i = 0; i < parsed_device_count; i++) {
+        if(parsed_devices[i].parent[0] == '\0') {
+            continue;
+        }
+
+        if(parsed_devices[i].cardio_path[0] != '\0') {
+            add_cardio_path(devices, *device_count, parsed_devices[i].cardio_path, parsed_devices[i].parent);
+        }
+
+        if(parsed_devices[i].keypad_identifier[0] != '\0') {
+            add_keypad_path(devices, *device_count, parsed_devices[i].keypad_identifier, parsed_devices[i].parent);
+        }
+    }
+
+    return devices;
 }

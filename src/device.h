@@ -18,6 +18,15 @@ typedef struct device {
     CHAR keypad_identifier[MAX_PATH];
 } device_t;
 
+typedef struct parsed_device {
+    WCHAR id[100];
+    CHAR location[100];
+    WCHAR parent[100];
+    WCHAR siblings[1000];
+    TCHAR cardio_path[MAX_PATH];
+    CHAR keypad_identifier[MAX_PATH];
+} parsed_device_t;
+
 device_t* get_devices(int vid, int pid, int mi, int* device_count);
 HDEVINFO get_device_info();
 device_details_t* get_device_details(LPWSTR device_id);
@@ -30,3 +39,5 @@ void add_siblings(device_t* devices, int device_count, PSTR location, PWSTR sibl
 void add_cardio_path(device_t* devices, int device_count, PTSTR cardio_path, PWSTR cardio_parent);
 void add_keypad_path(device_t* devices, int device_count, PTSTR keypad_path, PWSTR keypad_parent);
 BOOL validate_device(const char* device_path, int vid, int pid, int mi, bool capitalized);
+void init_parsed_device(parsed_device_t* parsed_device);
+device_t* group_devices(parsed_device_t* parsed_devices, int parsed_device_count, int* device_count);
