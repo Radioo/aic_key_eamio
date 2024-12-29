@@ -13,9 +13,9 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "architecture": "x86",
             "cacheVariables": {
-                "VCPKG_TARGET_TRIPLET": "x86-windows-static"
+                "VCPKG_TARGET_TRIPLET": "x86-windows-static",
+                "CMAKE_GENERATOR_PLATFORM": "Win32"
             }
         },
         {
@@ -25,9 +25,9 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "architecture": "x64",
             "cacheVariables": {
-                "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+                "CMAKE_GENERATOR_PLATFORM": "x64"
             }
         }
     ],
