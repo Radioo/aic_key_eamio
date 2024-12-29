@@ -29,11 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        triplet: [x64-windows-static, x86-windows-static]
-    env:
-      VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
-      VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.triplet }}
-      VCPKG_TARGET_TRIPLET: ${{ matrix.triplet }}
+        configure-preset: [vcpkg-32, vcpkg-64]
 
     steps:
       - uses: actions/checkout@v4
@@ -56,11 +52,11 @@ jobs:
       - name: Run CMake+vcpkg+Ninja+CTest to build packages and generate/build/test the code.
         uses: lukka/run-cmake@v10
         with:
-          configurePreset: 'vcpkg'
+          configurePreset: ${{ matrix.configure-preset }}
           buildPreset: 'vcpkg-release'
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: eamio-${{ matrix.triplet }}
+          name: eamio-${{ matrix.configure-preset }}
           path: build/vcpkg/Release
