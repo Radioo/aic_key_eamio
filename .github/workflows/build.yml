@@ -30,6 +30,7 @@ jobs:
       matrix:
         os: [windows-latest]
         configure-preset: [vcpkg-32, vcpkg-64]
+        build: [Debug, Release]
 
     steps:
       - uses: actions/checkout@v4
@@ -53,10 +54,10 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: ${{ matrix.configure-preset }}
-          buildPreset: 'vcpkg-release'
+          buildPreset: ${{ matrix.configure-preset }}-${{ matrix.build }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: eamio-${{ matrix.configure-preset }}
-          path: build/vcpkg/Release
+          name: eamio-${{ matrix.configure-preset }}-${{ matrix.build }}
+          path: build/${{ matrix.configure-preset }}/${{ matrix.build }}

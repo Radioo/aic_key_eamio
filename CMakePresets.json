@@ -31,17 +31,31 @@
     ],
     "buildPresets": [
         {
-            "name": "vcpkg-debug",
-            "configurePreset": "vcpkg",
-            "displayName": "Build (Debug)",
-            "description": "Build with Ninja/vcpkg (Debug)",
+            "name": "vcpkg-32-Debug",
+            "configurePreset": "vcpkg-32",
+            "displayName": "Build (Debug 32)",
+            "description": "Build with Ninja/vcpkg (Debug 32)",
             "configuration": "Debug"
         },
         {
-            "name": "vcpkg-release",
-            "configurePreset": "vcpkg",
-            "displayName": "Build (Release)",
-            "description": "Build with Ninja/vcpkg (Release)",
+            "name": "vcpkg-32-Release",
+            "configurePreset": "vcpkg-32",
+            "displayName": "Build (Release 32)",
+            "description": "Build with Ninja/vcpkg (Release 32)",
+            "configuration": "Release"
+        },
+        {
+            "name": "vcpkg-64-Debug",
+            "configurePreset": "vcpkg-64",
+            "displayName": "Build (Debug 64)",
+            "description": "Build with Ninja/vcpkg (Debug 64)",
+            "configuration": "Debug"
+        },
+        {
+            "name": "vcpkg-64-Release",
+            "configurePreset": "vcpkg-64",
+            "displayName": "Build (Release 64)",
+            "description": "Build with Ninja/vcpkg (Release 64)",
             "configuration": "Release"
         }
     ]
